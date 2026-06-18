@@ -69,8 +69,6 @@ func serverInit(ctx context.Context, hcServer *server.MCPServer, logger *log.Log
 		errC <- stdioServer.Listen(ctx, in, out)
 	}()
 
-	_, _ = fmt.Fprintf(os.Stderr, "Vault MCP Server running on stdio\n")
-
 	// Wait for shutdown signal
 	select {
 	case <-ctx.Done():
