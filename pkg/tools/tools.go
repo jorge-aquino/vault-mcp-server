@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2025
+// Copyright IBM Corp. 2025, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tools
@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/vault-mcp-server/pkg/tools/kv"
 	"github.com/hashicorp/vault-mcp-server/pkg/tools/pki"
 	"github.com/hashicorp/vault-mcp-server/pkg/tools/sys"
+	_ "github.com/hashicorp/vault-mcp-server/pkg/tools/transit"
 	"github.com/mark3labs/mcp-go/server"
 	log "github.com/sirupsen/logrus"
 )
@@ -63,4 +64,8 @@ func InitTools(hcServer *server.MCPServer, logger *log.Logger) {
 
 	issuePkiCertificate := pki.IssuePkiCertificate(logger)
 	hcServer.AddTool(issuePkiCertificate.Tool, issuePkiCertificate.Handler)
+
+	// Tools for Transit encryption-as-a-service
+	// (registrations appended as transit tools are delivered by WS-A/B/C)
+	_ = hcServer // suppress unused warning until tools are registered
 }
