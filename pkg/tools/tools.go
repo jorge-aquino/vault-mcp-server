@@ -80,6 +80,9 @@ func InitTools(hcServer *server.MCPServer, logger *log.Logger) {
 	listKeys := transit.ListTransitKeys(logger)
 	hcServer.AddTool(listKeys.Tool, listKeys.Handler)
 
+	deleteKey := transit.DeleteTransitKey(logger)
+	hcServer.AddTool(deleteKey.Tool, deleteKey.Handler)
+
 	// Encryption operations
 	encryptData := transit.EncryptData(logger)
 	hcServer.AddTool(encryptData.Tool, encryptData.Handler)
