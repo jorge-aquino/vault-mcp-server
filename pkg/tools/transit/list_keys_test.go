@@ -17,7 +17,9 @@ func TestListTransitKeysHandler_Success(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/transit/keys", func(w http.ResponseWriter, r *http.Request) {
-		// Vault SDK sends LIST verb
+		// The Vault Go SDK encodes LIST as GET ?list=true
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "true", r.URL.Query().Get("list"))
 		jsonResponse(w, map[string]interface{}{
 			"data": map[string]interface{}{
 				"keys": []interface{}{"key1", "key2"},

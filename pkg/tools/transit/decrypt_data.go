@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"unicode/utf8"
 
 	"github.com/hashicorp/vault-mcp-server/pkg/client"
 	"github.com/hashicorp/vault-mcp-server/pkg/utils"
@@ -94,7 +95,7 @@ func decryptDataHandler(ctx context.Context, req mcp.CallToolRequest, logger *lo
 	}
 
 	decoded, decodeErr := base64.StdEncoding.DecodeString(plaintextB64)
-	if decodeErr == nil {
+	if decodeErr == nil && utf8.Valid(decoded) {
 		return mcp.NewToolResultText(fmt.Sprintf("Plaintext (base64): %s\nPlaintext (decoded): %s", plaintextB64, string(decoded))), nil
 	}
 

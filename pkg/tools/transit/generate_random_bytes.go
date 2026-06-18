@@ -24,6 +24,9 @@ func GenerateRandomBytes(logger *log.Logger) server.ServerTool {
 				DestructiveHint: utils.ToBoolPtr(false),
 				IdempotentHint:  utils.ToBoolPtr(false),
 			}),
+			mcp.WithString("mount",
+				mcp.Description("Transit mount path. Defaults to 'transit'."),
+			),
 			mcp.WithNumber("bytes",
 				mcp.Description("Number of random bytes to generate. Defaults to 32."),
 			),
@@ -57,9 +60,8 @@ func generateRandomBytesHandler(ctx context.Context, req mcp.CallToolRequest, lo
 		format = "base64"
 	}
 
-	// generate_random_bytes uses the Vault sys-level random endpoint: <mount>/random/:bytes.
-	// This operation is not tied to any specific Transit key, so mount is fixed to DefaultMount.
-	path := fmt.Sprintf("%s/%d", transitPath(DefaultMount, "random", ""), numBytes)
+	mount := resolveMount(args)
+	path := fmt.Sprintf("%s/%d", transitPath(mount, "random", ""), numBytes)
 
 	vault, err := client.GetVaultClientFromContext(ctx, logger)
 	if err != nil {

@@ -25,6 +25,9 @@ func HashData(logger *log.Logger) server.ServerTool {
 				DestructiveHint: utils.ToBoolPtr(false),
 				IdempotentHint:  utils.ToBoolPtr(true),
 			}),
+			mcp.WithString("mount",
+				mcp.Description("Transit mount path. Defaults to 'transit'."),
+			),
 			mcp.WithString("input",
 				mcp.Required(),
 				mcp.Description("Data to hash. Raw string by default; set input_is_base64=true if already base64-encoded."),
@@ -77,10 +80,8 @@ func hashDataHandler(ctx context.Context, req mcp.CallToolRequest, logger *log.L
 		format = "hex"
 	}
 
-	// hash_data is a Vault sys-level operation: the path is <mount>/hash/:algorithm and does
-	// not depend on a key name. Vault requires the mount in the path but the result is
-	// key-independent, so we always use DefaultMount here (plan/04: "Mount-independent").
-	path := fmt.Sprintf("%s/%s", transitPath(DefaultMount, "hash", ""), algorithm)
+	mount := resolveMount(args)
+	path := fmt.Sprintf("%s/%s", transitPath(mount, "hash", ""), algorithm)
 
 	b64input := input
 	if !inputIsBase64 {

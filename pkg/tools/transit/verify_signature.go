@@ -117,7 +117,10 @@ func verifySignatureHandler(ctx context.Context, req mcp.CallToolRequest, logger
 		return mcp.NewToolResultError("Empty response from Vault"), nil
 	}
 
-	valid, _ := secret.Data["valid"].(bool)
+	valid, ok := secret.Data["valid"].(bool)
+	if !ok {
+		return mcp.NewToolResultError("Unexpected Vault response: missing or non-boolean 'valid' field"), nil
+	}
 	logger.WithField("key", name).Debug("Successfully verified signature")
 	return mcp.NewToolResultText(fmt.Sprintf("Signature is valid: %v", valid)), nil
 }

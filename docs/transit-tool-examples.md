@@ -3,6 +3,9 @@
 One runnable example for each of the 13 Vault Transit MCP tools. All examples use the key name
 `customer-data` and realistic inputs. Use these as a reference for Bob prompts or direct tool calls.
 
+> **Note:** The "Expected output" blocks below are illustrative examples. Exact output text may
+> vary slightly between Vault versions and server configurations.
+
 ---
 
 ## Key Management Tools
