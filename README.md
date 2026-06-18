@@ -424,6 +424,92 @@ vault-mcp-server/
 └── LICENSE                               # License information
 ```
 
+## Transit Tools
+
+Vault Transit is HashiCorp Vault's *encryption-as-a-service* engine. Instead of managing
+encryption keys in your application, you send data to Vault for cryptographic operations — Vault
+holds the keys, performs the operations, and returns only the result. This eliminates key sprawl
+and makes rotation, auditing, and access control Vault's responsibility.
+
+The vault-mcp-server Transit tools give Bob a structured, validated interface to the full
+Transit lifecycle — from key creation through encryption, decryption, key rotation, ciphertext
+rewrapping, HMAC generation, and integrity verification.
+
+### Prerequisites
+
+```bash
+# Start Vault in dev mode
+vault server -dev
+export VAULT_ADDR="http://127.0.0.1:8200"
+export VAULT_TOKEN="<root-token-from-output>"
+
+# Enable the Transit secrets engine
+vault secrets enable transit
+```
+
+### Available Transit Tools
+
+| Tool | Description |
+|------|-------------|
+| `create_transit_key` | Create a named encryption key (non-exportable by default) |
+| `read_transit_key` | Read key metadata: type, versions, capabilities |
+| `rotate_transit_key` | Rotate a key to a new version (old ciphertext stays decryptable) |
+| `list_transit_keys` | List all key names in the Transit mount |
+| `encrypt_data` | Encrypt plaintext using a Transit key; returns `vault:vN:...` ciphertext |
+| `decrypt_data` | Decrypt ciphertext; returns base64 plaintext and decoded UTF-8 text |
+| `rewrap_data` | Upgrade ciphertext to the latest key version without exposing plaintext |
+| `generate_hmac` | Generate a keyed HMAC for data-integrity verification |
+| `verify_hmac` | Verify an HMAC against the original input |
+| `sign_data` | Sign data using an asymmetric Transit key (ed25519, RSA, ECDSA) |
+| `verify_signature` | Verify a digital signature |
+| `hash_data` | Hash data using a Vault-managed algorithm |
+| `generate_random_bytes` | Generate cryptographically secure random bytes |
+
+All tools accept an optional `mount` parameter (default: `transit`).
+
+### Quick example — 8-step workflow with Bob
+
+```
+1. "Create a Transit key named customer-data"
+        → create_transit_key(name="customer-data")
+        ← Key created (type=aes256-gcm96, exportable=false)
+
+2. "Read the customer-data key metadata"
+        → read_transit_key(name="customer-data")
+        ← Type, version 1, capabilities
+
+3. "Encrypt the text 'the quick brown fox' using customer-data"
+        → encrypt_data(name="customer-data", plaintext="the quick brown fox")
+        ← vault:v1:8SDd3WHDOjf7mq69...
+
+4. "Decrypt that ciphertext"
+        → decrypt_data(name="customer-data", ciphertext="vault:v1:...")
+        ← the quick brown fox
+
+5. "Rotate the customer-data key"
+        → rotate_transit_key(name="customer-data")
+        ← New latest version: 2
+
+6. "Rewrap the v1 ciphertext to the latest version"
+        → rewrap_data(name="customer-data", ciphertext="vault:v1:...")
+        ← vault:v2:dUI9iegXADNT...
+
+7. "Generate an HMAC for 'the quick brown fox'"
+        → generate_hmac(name="customer-data", input="the quick brown fox")
+        ← vault:v2:MlFa3M6+kL...
+
+8. "Verify that HMAC against the original input"
+        → verify_hmac(name="customer-data", input="the quick brown fox", hmac="vault:v2:...")
+        ← HMAC verified successfully: the input matches the HMAC.
+```
+
+For full examples of all 13 tools, see [`docs/transit-tool-examples.md`](docs/transit-tool-examples.md).
+
+For the narrated demo script, see [`docs/demo-script.md`](docs/demo-script.md).
+
+For a step-by-step guide to adding more Vault engines, see
+[`docs/add-a-new-vault-engine.md`](docs/add-a-new-vault-engine.md).
+
 ## Support
 
 For bug reports and feature requests, please open an [issue on GitHub](https://github.com/hashicorp/vault-mcp-server/issues).

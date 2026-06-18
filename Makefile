@@ -15,7 +15,7 @@ TARGET_DIR ?= $(CURDIR)/dist
 # Build flags
 LDFLAGS=-ldflags="-s -w -X github.com/hashicorp/$(BASENAME)/version.GitCommit=$(shell git rev-parse HEAD) -X github.com/hashicorp/$(BASENAME)/version.BuildDate=$(shell git show --no-show-signature -s --format=%cd --date=format:"%Y-%m-%dT%H:%M:%SZ" HEAD)"
 
-.PHONY: all build crt-build test test-e2e clean deps docker-build run-http docker-run-http test-http cleanup-test-containers help
+.PHONY: all build crt-build test test-e2e test-transit test-transit-e2e clean deps docker-build run-http docker-run-http test-http cleanup-test-containers help
 
 # Default target
 all: build
@@ -41,6 +41,16 @@ test:
 # Run e2e tests
 test-e2e:
 	@trap '$(MAKE) cleanup-test-containers' EXIT; $(GO) test -v --tags e2e ./e2e
+
+# Run Transit unit tests
+test-transit:
+	$(GO) test -v ./pkg/tools/transit/...
+
+# Run Transit end-to-end tests (requires running Vault with transit enabled)
+# export VAULT_ADDR=http://127.0.0.1:8200 VAULT_TOKEN=root
+# vault secrets enable transit
+test-transit-e2e:
+	$(GO) test -tags=e2e -v ./e2e/ -run Transit
 
 # Clean build artifacts
 clean:
@@ -94,6 +104,8 @@ help:
 	@echo "  build          - Build the binary"
 	@echo "  test           - Run all tests"
 	@echo "  test-e2e       - Run end-to-end tests"
+	@echo "  test-transit   - Run Transit unit tests"
+	@echo "  test-transit-e2e - Run Transit e2e tests (requires VAULT_ADDR, VAULT_TOKEN)"
 	@echo "  clean          - Remove build artifacts"
 	@echo "  deps           - Download dependencies"
 	@echo "  docker-build   - Build docker image"
