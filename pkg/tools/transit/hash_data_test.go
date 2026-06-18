@@ -95,3 +95,30 @@ func TestHashDataHandler_CustomAlgorithm(t *testing.T) {
 	assert.Contains(t, getResultText(result), "sha2-512")
 	assert.Contains(t, getResultText(result), "deadbeef512")
 }
+
+func TestHashDataHandler_VaultError(t *testing.T) {
+	logger := newLogger()
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/v1/transit/hash/sha2-256", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		jsonResponse(w, map[string]interface{}{"errors": []string{"internal error"}})
+	})
+
+	ctx, cleanup := newTestContext(t, mux)
+	defer cleanup()
+
+	req := mcp.CallToolRequest{
+		Params: mcp.CallToolParams{
+			Name: "hash_data",
+			Arguments: map[string]interface{}{
+				"input": "hello world",
+			},
+		},
+	}
+
+	result, err := hashDataHandler(ctx, req, logger)
+	require.NoError(t, err)
+	assert.True(t, result.IsError)
+	assert.Contains(t, getResultText(result), "Failed to hash data")
+}

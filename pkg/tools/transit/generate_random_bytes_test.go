@@ -112,3 +112,28 @@ func TestGenerateRandomBytesHandler_HexFormat(t *testing.T) {
 	assert.False(t, result.IsError, "expected success, got: %s", getResultText(result))
 	assert.Contains(t, getResultText(result), "Random bytes (hex):")
 }
+
+func TestGenerateRandomBytesHandler_VaultError(t *testing.T) {
+	logger := newLogger()
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/v1/transit/random/32", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		jsonResponse(w, map[string]interface{}{"errors": []string{"internal error"}})
+	})
+
+	ctx, cleanup := newTestContext(t, mux)
+	defer cleanup()
+
+	req := mcp.CallToolRequest{
+		Params: mcp.CallToolParams{
+			Name:      "generate_random_bytes",
+			Arguments: map[string]interface{}{},
+		},
+	}
+
+	result, err := generateRandomBytesHandler(ctx, req, logger)
+	require.NoError(t, err)
+	assert.True(t, result.IsError)
+	assert.Contains(t, getResultText(result), "Failed to generate random bytes")
+}

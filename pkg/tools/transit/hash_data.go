@@ -77,6 +77,9 @@ func hashDataHandler(ctx context.Context, req mcp.CallToolRequest, logger *log.L
 		format = "hex"
 	}
 
+	// hash_data is a Vault sys-level operation: the path is <mount>/hash/:algorithm and does
+	// not depend on a key name. Vault requires the mount in the path but the result is
+	// key-independent, so we always use DefaultMount here (plan/04: "Mount-independent").
 	path := fmt.Sprintf("%s/%s", transitPath(DefaultMount, "hash", ""), algorithm)
 
 	b64input := input

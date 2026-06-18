@@ -65,9 +65,22 @@ func rotateTransitKeyHandler(ctx context.Context, req mcp.CallToolRequest, logge
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to rotate transit key: %v", err)), nil
 	}
 
+	// Read back the key metadata to surface the new latest_version in the response.
+	meta, err := vault.Logical().Read(transitPath(mount, "keys", name))
+	if err != nil || meta == nil {
+		// Rotation succeeded — return a useful message even if the follow-up read fails.
+		return mcp.NewToolResultText(fmt.Sprintf(
+			"Successfully rotated transit key %q in mount %q. "+
+				"Use 'rewrap_data' to upgrade old ciphertext to the latest key version.",
+			name, mount,
+		)), nil
+	}
+
+	latestVersion := meta.Data["latest_version"]
 	return mcp.NewToolResultText(fmt.Sprintf(
-		"Successfully rotated transit key %q in mount %q. A new key version is now active. "+
+		"Successfully rotated transit key %q in mount %q. "+
+			"New latest version: %v. "+
 			"Use 'rewrap_data' to upgrade old ciphertext to the latest key version.",
-		name, mount,
+		name, mount, latestVersion,
 	)), nil
 }

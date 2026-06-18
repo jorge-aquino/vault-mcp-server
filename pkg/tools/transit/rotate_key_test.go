@@ -20,6 +20,16 @@ func TestRotateTransitKeyHandler_Success(t *testing.T) {
 		require.Equal(t, http.MethodPut, r.Method)
 		w.WriteHeader(http.StatusNoContent)
 	})
+	// Handler reads back key metadata to surface the new version number.
+	mux.HandleFunc("/v1/transit/keys/customer-data", func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		jsonResponse(w, map[string]interface{}{
+			"data": map[string]interface{}{
+				"latest_version": 2,
+				"type":           "aes256-gcm96",
+			},
+		})
+	})
 
 	ctx, cleanup := newTestContext(t, mux)
 	defer cleanup()
@@ -35,6 +45,7 @@ func TestRotateTransitKeyHandler_Success(t *testing.T) {
 	assert.False(t, result.IsError, "expected success: %s", getResultText(result))
 	text := getResultText(result)
 	assert.Contains(t, text, "customer-data")
+	assert.Contains(t, text, "2")
 	assert.Contains(t, text, "rewrap_data")
 }
 

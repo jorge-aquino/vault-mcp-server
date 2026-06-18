@@ -65,6 +65,34 @@ func TestSignDataHandler_MissingName(t *testing.T) {
 	assert.True(t, result.IsError)
 }
 
+func TestSignDataHandler_VaultError(t *testing.T) {
+	logger := newLogger()
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/v1/transit/sign/my-key/sha2-256", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		jsonResponse(w, map[string]interface{}{"errors": []string{"internal error"}})
+	})
+
+	ctx, cleanup := newTestContext(t, mux)
+	defer cleanup()
+
+	req := mcp.CallToolRequest{
+		Params: mcp.CallToolParams{
+			Name: "sign_data",
+			Arguments: map[string]interface{}{
+				"name":  "my-key",
+				"input": "hello world",
+			},
+		},
+	}
+
+	result, err := signDataHandler(ctx, req, logger)
+	require.NoError(t, err)
+	assert.True(t, result.IsError)
+	assert.Contains(t, getResultText(result), "Failed to sign data")
+}
+
 func TestSignDataHandler_BadBase64(t *testing.T) {
 	logger := newLogger()
 
