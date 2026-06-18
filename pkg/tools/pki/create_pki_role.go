@@ -79,9 +79,14 @@ func createPkiRoleHandler(ctx context.Context, req mcp.CallToolRequest, logger *
 		return mcp.NewToolResultError("Missing or invalid 'role_name' parameter"), nil
 	}
 
-	allowAnyName := args["allow_any_name"].(bool)
-	allowGlobDomains := args["allow_glob_domains"].(bool)
-
+	allowAnyName, ok := args["allow_any_name"].(bool)
+	if !ok {
+		allowAnyName = true // Default to true if not provided
+	}
+	allowGlobDomains, ok := args["allow_glob_domains"].(bool)
+	if !ok {
+		allowGlobDomains = false // Default to false if not provided
+	}
 	allowIpSans, ok := args["allow_ip_sans"].(bool)
 	if !ok {
 		allowIpSans = false // Default to false if not provided
