@@ -78,20 +78,30 @@ func readPkiIssuerHandler(ctx context.Context, req mcp.CallToolRequest, logger *
 
 	fullPath := fmt.Sprintf("%s/issuers", mount)
 
-	// Write the issuer data to the specified path
+	// List all issuers to resolve name → ID
 	secret, err := vault.Logical().List(fullPath)
 
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("failed to read path '%s': %v", fullPath, err)), nil
 	}
 
-	// V1 API structure: secret.Data directly contains the key-value pairs
-	keyInfo := secret.Data["key_info"].(map[string]interface{})
+	if secret == nil || secret.Data == nil {
+		return mcp.NewToolResultError(fmt.Sprintf("No issuers found on mount '%s'", mount)), nil
+	}
+
+	keyInfo, ok := secret.Data["key_info"].(map[string]interface{})
+	if !ok {
+		return mcp.NewToolResultError("unexpected response format from Vault when listing issuers"), nil
+	}
 
 	var issuerId string
 
 	for key, value := range keyInfo {
-		if value.(map[string]interface{})["issuer_name"] == issuerName {
+		entry, ok := value.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		if entry["issuer_name"] == issuerName {
 			issuerId = key
 			break
 		}

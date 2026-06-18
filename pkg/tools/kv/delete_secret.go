@@ -65,10 +65,7 @@ func deleteSecretHandler(ctx context.Context, req mcp.CallToolRequest, logger *l
 	}
 
 	// Can be empty to delete the entire secret
-	key, ok := args["key"].(string)
-	if !ok {
-		return mcp.NewToolResultError("Missing or invalid 'key' parameter"), nil
-	}
+	key, _ := args["key"].(string)
 
 	logger.WithFields(log.Fields{
 		"mount": mount,

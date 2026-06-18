@@ -64,9 +64,9 @@ func enablePkiHandler(ctx context.Context, req mcp.CallToolRequest, logger *log.
 		return mcp.NewToolResultError("Missing or invalid arguments format"), nil
 	}
 
-	path, ok := args["path"].(string)
-	if !ok || path == "" {
-		return mcp.NewToolResultError("Missing or invalid 'path' parameter"), nil
+	path, _ := args["path"].(string)
+	if path == "" {
+		path = "pki"
 	}
 
 	description, _ := args["description"].(string)

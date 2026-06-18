@@ -68,14 +68,17 @@ func listPkiRolesHandler(ctx context.Context, req mcp.CallToolRequest, logger *l
 
 	fullPath := fmt.Sprintf("%s/roles", mount)
 
-	// Write the issuer data to the specified path
 	secret, err := vault.Logical().List(fullPath)
 
-	if err != nil || secret == nil {
+	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("failed to read path '%s': %v", fullPath, err)), nil
 	}
 
-	// V1 API structure: secret.Data directly contains the key-value pairs
+	// No roles yet is a valid state — return empty list
+	if secret == nil || secret.Data == nil {
+		return mcp.NewToolResultText("[]"), nil
+	}
+
 	keyInfo := secret.Data["keys"]
 
 	// Marshal to JSON

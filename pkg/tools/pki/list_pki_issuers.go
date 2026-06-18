@@ -68,14 +68,16 @@ func listPkiIssuersHandler(ctx context.Context, req mcp.CallToolRequest, logger 
 
 	fullPath := fmt.Sprintf("%s/issuers", mount)
 
-	// Write the issuer data to the specified path
 	secret, err := vault.Logical().List(fullPath)
 
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("failed to read path '%s': %v", fullPath, err)), nil
 	}
 
-	// V1 API structure: secret.Data directly contains the key-value pairs
+	if secret == nil || secret.Data == nil {
+		return mcp.NewToolResultText("{}"), nil
+	}
+
 	keyInfo := secret.Data["key_info"]
 
 	// Marshal to JSON
