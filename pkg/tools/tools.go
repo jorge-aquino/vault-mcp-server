@@ -24,6 +24,9 @@ func InitTools(hcServer *server.MCPServer, logger *log.Logger) {
 	deleteMountTool := sys.DeleteMount(logger)
 	hcServer.AddTool(deleteMountTool.Tool, deleteMountTool.Handler)
 
+	enableTransitTool := sys.EnableTransit(logger)
+	hcServer.AddTool(enableTransitTool.Tool, enableTransitTool.Handler)
+
 	// Tools for KV secrets management
 	listSecretsTool := kv.ListSecrets(logger)
 	hcServer.AddTool(listSecretsTool.Tool, listSecretsTool.Handler)
@@ -50,6 +53,9 @@ func InitTools(hcServer *server.MCPServer, logger *log.Logger) {
 	readPkiIssuer := pki.ReadPkiIssuer(logger)
 	hcServer.AddTool(readPkiIssuer.Tool, readPkiIssuer.Handler)
 
+	deletePkiIssuer := pki.DeletePkiIssuer(logger)
+	hcServer.AddTool(deletePkiIssuer.Tool, deletePkiIssuer.Handler)
+
 	listPkiRoles := pki.ListPkiRoles(logger)
 	hcServer.AddTool(listPkiRoles.Tool, listPkiRoles.Handler)
 
@@ -64,6 +70,9 @@ func InitTools(hcServer *server.MCPServer, logger *log.Logger) {
 
 	issuePkiCertificate := pki.IssuePkiCertificate(logger)
 	hcServer.AddTool(issuePkiCertificate.Tool, issuePkiCertificate.Handler)
+
+	revokePkiCertificate := pki.RevokePkiCertificate(logger)
+	hcServer.AddTool(revokePkiCertificate.Tool, revokePkiCertificate.Handler)
 
 	// Tools for Transit encryption-as-a-service
 
@@ -82,6 +91,9 @@ func InitTools(hcServer *server.MCPServer, logger *log.Logger) {
 
 	deleteKey := transit.DeleteTransitKey(logger)
 	hcServer.AddTool(deleteKey.Tool, deleteKey.Handler)
+
+	updateKey := transit.UpdateTransitKey(logger)
+	hcServer.AddTool(updateKey.Tool, updateKey.Handler)
 
 	// Encryption operations
 	encryptData := transit.EncryptData(logger)
